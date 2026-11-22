@@ -113,17 +113,17 @@
   --purple-light:   var(--color-secondary-soft);
   --purple-border:  var(--color-secondary-border);
 
-  /* ---------- Typography Scale ---------- */
+  /* ---------- Typography Scale (Fluid & Scalable) ---------- */
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
-  --text-xs:   0.75rem;
-  --text-sm:   0.875rem;
-  --text-md:   0.9375rem;
-  --text-base: 1rem;
-  --text-lg:   1.125rem;
-  --text-xl:   1.25rem;
-  --text-2xl:  1.5rem;
-  --text-3xl:  1.875rem;
+  --text-xs:   clamp(0.7rem, 0.68rem + 0.1vw, 0.75rem);
+  --text-sm:   clamp(0.8125rem, 0.78rem + 0.15vw, 0.875rem);
+  --text-md:   clamp(0.875rem, 0.85rem + 0.18vw, 0.9375rem);
+  --text-base: clamp(0.9375rem, 0.9rem + 0.2vw, 1rem);
+  --text-lg:   clamp(1.0625rem, 1rem + 0.4vw, 1.25rem);
+  --text-xl:   clamp(1.25rem, 1.1rem + 0.8vw, 1.75rem);
+  --text-2xl:  clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem);
+  --text-3xl:  clamp(1.875rem, 1.5rem + 1.8vw, 2.75rem);
   --weight-regular: 400;
   --weight-medium:  500;
   --weight-semibold: 600;
@@ -157,15 +157,37 @@
   --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
   --shadow-modal: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
 
-  /* ---------- Layout Dimensions ---------- */
+  /* ---------- Layout Dimensions & Responsive Tokens ---------- */
   --header-height: 56px;
   --sidebar-width: 240px;
   --container-max: 1400px;
+  --content-max:   1440px;
   --touch-target:  44px; /* Minimum mobile touch target */
+  --page-padding:  var(--space-4);
+
+  /* Safe areas (notches, home indicator) */
+  --safe-top:    env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left:   env(safe-area-inset-left, 0px);
+  --safe-right:  env(safe-area-inset-right, 0px);
+
+  --bottom-nav-height: 64px;
 
   /* ---------- Transitions ---------- */
   --transition-fast: 0.15s ease-in-out;
   --transition-base: 0.2s ease-in-out;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --page-padding: var(--space-5);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --page-padding: var(--space-6);
+  }
 }
 
 /* ---------- Petgards Clinical Mint / Teal Theme (Replaces Legacy Dark Theme) ---------- */
@@ -299,5 +321,86 @@ textarea {
 [data-theme='petgards'] ::-webkit-scrollbar-thumb:hover {
   background: var(--slate-500);
 }
+
+/* ============================================================
+   GLOBAL FOUNDATIONS & BASE RESET (Step 2)
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+html, body, #root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;      /* Safety net against unintentional horizontal blowout */
+  overflow-wrap: anywhere; /* Long names, emails, transaction IDs break safely */
+}
+
+img, svg, video, canvas {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Flex and grid children can overflow unless min-width is reset */
+.row > *, .grid > *, .card, .stack > * {
+  min-width: 0;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+/* Shared Responsive Page Container */
+.page {
+  width: 100%;
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding-inline: max(var(--page-padding), var(--safe-left));
+  padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom) + var(--space-4));
+}
+
+@media (min-width: 1024px) {
+  .page {
+    padding-bottom: var(--space-6);
+  }
+}
+
+/* Mobile & Touch Rules:
+   Apply 44px touch targets and 16px input font size only on mobile/touch screens
+   Desktop density must not change! */
+@media (max-width: 1023px) and (pointer: coarse) {
+  button,
+  .btn,
+  [role="button"],
+  select,
+  input[type="button"],
+  input[type="submit"] {
+    min-height: var(--touch-target);
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px !important; /* Prevents iOS auto-zoom on input focus */
+  }
+}
+
+/* Wrap hover-only effects */
+@media (hover: hover) {
+  .sidebar-nav-item:hover,
+  .btn:hover,
+  .action-btn:hover {
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+  }
+}
+
 
 
