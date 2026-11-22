@@ -22,7 +22,12 @@ export function LiveTranscript({ segments, partialSegment, doctorName, ownerName
   };
 
   return (
-    <div className="transcript-container">
+    <div
+      className="transcript-container"
+      aria-live="polite"
+      role="log"
+      aria-label="Live audio transcript"
+    >
       {segments.length === 0 && !partialSegment && (
         <div className="transcript-empty-state">
           <div className="transcript-empty-icon-box">

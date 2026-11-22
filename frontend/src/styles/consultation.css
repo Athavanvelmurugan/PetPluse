@@ -889,6 +889,12 @@ body {
   transition: all var(--transition-fast);
 }
 
+@media (max-width: 1023px) and (pointer: coarse) {
+  .segmented-btn {
+    min-height: var(--touch-target);
+  }
+}
+
 .segmented-btn:hover:not(.active) {
   color: var(--slate-900);
   background: var(--color-surface-alt);
@@ -954,7 +960,7 @@ body {
 
 .transcript-container {
   flex: 1;
-  min-height: 0;
+  min-height: 180px;
   max-height: 360px;
   overflow-y: auto;
   padding: var(--space-4);
@@ -962,6 +968,9 @@ body {
   flex-direction: column;
   gap: 10px;
   background: var(--slate-50);
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  contain: layout;
 }
 
 .transcript-empty-state {
@@ -2554,6 +2563,13 @@ textarea.form-control,
   -webkit-overflow-scrolling: touch;
 }
 
+.table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
 .directory-table-panel table,
 .table-wrap table {
   min-width: 580px;
@@ -3114,6 +3130,22 @@ textarea.form-control,
 }
 
 /* ============================================================
+   Tablet Breakpoint (768px - 1023px)
+   ============================================================ */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .split-workspace {
+    grid-template-columns: minmax(320px, 45%) minmax(0, 55%);
+    gap: var(--space-3);
+  }
+
+  .recording-panel,
+  .documents-panel {
+    height: clamp(480px, calc(100dvh - 240px), 720px);
+    min-height: 480px;
+  }
+}
+
+/* ============================================================
    Desktop Breakpoint (>= 1024px)
    ============================================================ */
 @media (min-width: 1024px) {
@@ -3164,3 +3196,16 @@ textarea.form-control,
     padding: var(--space-5);
   }
 }
+
+/* ─── Mobile/Touchscreen Touch Target Protection (Desktop density unchanged) ─── */
+@media (max-width: 1023px) and (pointer: coarse) {
+  .consultation-workspace .btn,
+  .consultation-workspace .btn-control-action,
+  .btn-control-action,
+  .btn-upload-action,
+  .btn-reset-action,
+  .action-btn {
+    min-height: var(--touch-target) !important;
+  }
+}
+
