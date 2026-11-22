@@ -5,7 +5,6 @@
   "scripts": {
     "start": "cd backend && node src/server.js",
     "build": "cd backend && npm install",
-    "postinstall": "cd backend && npm install",
     "migrate": "cd backend && node src/db/migrate.js",
     "backend:start": "cd backend && node src/server.js",
     "backend:dev": "cd backend && node --watch src/server.js",
