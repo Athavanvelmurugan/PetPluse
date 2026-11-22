@@ -520,6 +520,59 @@ export function DoctorPortal() {
           onLaunchConsultation={handleStartConsultation}
         />
       )}
+
+      {/* Mobile Bottom Navigation Bar (< 768px) */}
+      <nav className="mobile-bottom-nav" aria-label="Mobile Clinical Navigation">
+        <button
+          type="button"
+          className={`mobile-bottom-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+          onClick={() => handleTabSelect('dashboard')}
+          aria-label="Dashboard"
+        >
+          <LayoutDashboard size={20} aria-hidden="true" />
+          <span className="mobile-nav-label">Dashboard</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-bottom-nav-item ${activeTab === 'consultation' ? 'active' : ''}`}
+          onClick={() => handleTabSelect('consultation')}
+          aria-label="Live Consult"
+        >
+          <Stethoscope size={20} aria-hidden="true" />
+          <span className="mobile-nav-label">Consult</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-bottom-nav-item ${activeTab === 'patients' ? 'active' : ''}`}
+          onClick={() => handleTabSelect('patients')}
+          aria-label="Patients Directory"
+        >
+          <Heart size={20} aria-hidden="true" />
+          <span className="mobile-nav-label">Patients</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-bottom-nav-item ${activeTab === 'schedule' ? 'active' : ''}`}
+          onClick={() => handleTabSelect('schedule')}
+          aria-label="Doctor Schedule"
+        >
+          <Calendar size={20} aria-hidden="true" />
+          <span className="mobile-nav-label">Schedule</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-bottom-nav-item ${mobileSidebarOpen ? 'active' : ''}`}
+          onClick={() => setMobileSidebarOpen(true)}
+          aria-label="More Navigation Options"
+        >
+          <Menu size={20} aria-hidden="true" />
+          <span className="mobile-nav-label">More</span>
+        </button>
+      </nav>
     </div>
   );
 }

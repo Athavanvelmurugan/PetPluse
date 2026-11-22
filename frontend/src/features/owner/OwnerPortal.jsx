@@ -352,6 +352,59 @@ export function OwnerPortal({ owner, onLogout }) {
         onClose={() => setIsDharuOpen(false)}
         initialMode="chat"
       />
+
+      {/* Mobile Bottom Navigation Bar (< 768px) */}
+      <nav className="mobile-bottom-nav" aria-label="Mobile Pet Guardian Navigation">
+        <button
+          type="button"
+          className={`mobile-bottom-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+          onClick={() => handleTabSelect('dashboard')}
+          aria-label="Dashboard"
+        >
+          <LayoutDashboard size={20} aria-hidden="true" />
+          <span className="mobile-nav-label">Dashboard</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-bottom-nav-item ${activeTab === 'appointments' ? 'active' : ''}`}
+          onClick={() => handleTabSelect('appointments')}
+          aria-label="Appointments & Booking"
+        >
+          <Calendar size={20} aria-hidden="true" />
+          <span className="mobile-nav-label">Booking</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-bottom-nav-item ${activeTab === 'consultation' ? 'active' : ''}`}
+          onClick={() => handleTabSelect('consultation')}
+          aria-label="Live Consultation"
+        >
+          <Stethoscope size={20} aria-hidden="true" />
+          <span className="mobile-nav-label">Consult</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-bottom-nav-item ${activeTab === 'pets' ? 'active' : ''}`}
+          onClick={() => handleTabSelect('pets')}
+          aria-label="Pet Profiles"
+        >
+          <Heart size={20} aria-hidden="true" />
+          <span className="mobile-nav-label">My Pets</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-bottom-nav-item ${mobileSidebarOpen ? 'active' : ''}`}
+          onClick={() => setMobileSidebarOpen(true)}
+          aria-label="More Navigation Options"
+        >
+          <Menu size={20} aria-hidden="true" />
+          <span className="mobile-nav-label">More</span>
+        </button>
+      </nav>
     </div>
   );
 }
