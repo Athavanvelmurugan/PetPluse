@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
   Calendar, Clock, Heart, Stethoscope, CheckCircle2,
-  AlertCircle, ArrowRight, RefreshCw, Sparkles, Sun, Moon
+  AlertCircle, ArrowRight, RefreshCw, Sparkles, Sun, Moon,
+  MessageSquare, Mic, Bell, Bot
 } from 'lucide-react';
+import { AssistantDrawer } from '../assistant/AssistantDrawer';
+import { usePushNotifications } from '../assistant/usePushNotifications';
 
 export function OwnerBookingTab() {
   const [pets, setPets] = useState([]);
@@ -20,6 +23,16 @@ export function OwnerBookingTab() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [successApt, setSuccessApt] = useState(null);
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const [assistantMode, setAssistantMode] = useState('chat');
+
+  const {
+    isSupported: pushSupported,
+    isSubscribed: pushSubscribed,
+    subscribe: subscribePush,
+    unsubscribe: unsubscribePush,
+    loading: pushLoading,
+  } = usePushNotifications();
 
   // 1. Load Owner Pets
   useEffect(() => {
@@ -50,16 +63,23 @@ export function OwnerBookingTab() {
         const res = await fetch(`/api/v1/owner-portal/available-slots?date=${selectedDate}`);
         const data = await res.json();
         if (data.success) {
+          const raw = data.data || [];
           const allSlots = [];
-          (data.data || []).forEach((docSchedule) => {
-            (docSchedule.availableSlots || []).forEach((slot) => {
-              allSlots.push({
-                ...slot,
-                doctorId: docSchedule.doctorId,
-                doctorName: docSchedule.doctorName,
+          if (raw.length > 0 && raw[0].availableSlots) {
+            raw.forEach((docSchedule) => {
+              (docSchedule.availableSlots || []).forEach((slot) => {
+                allSlots.push({
+                  ...slot,
+                  doctorId: docSchedule.doctorId,
+                  doctorName: docSchedule.doctorName,
+                });
               });
             });
-          });
+          } else {
+            raw.forEach((slot) => {
+              allSlots.push(slot);
+            });
+          }
           setSlots(allSlots);
         } else {
           setError(data.error || 'Failed to load scheduling slots.');
@@ -172,6 +192,61 @@ export function OwnerBookingTab() {
           <p className="owner-section-subtitle">
             Self-service appointment scheduler with real-time doctor availability and conflict prevention.
           </p>
+        </div>
+      </div>
+
+      {/* Dharu AI Booking Assistant Trigger Banner */}
+      <div className="assistant-trigger-bar">
+        <div className="assistant-trigger-left">
+          <div className="assistant-trigger-badge" aria-hidden="true">
+            <Bot size={22} />
+          </div>
+          <div className="assistant-trigger-text">
+            <span className="assistant-trigger-title">Meet Dharu — Your Veterinary AI Assistant</span>
+            <span className="assistant-trigger-desc">
+              Book visits conversationally by typing or speaking in English, Tamil, or Tanglish.
+            </span>
+          </div>
+        </div>
+
+        <div className="assistant-trigger-actions">
+          <button
+            type="button"
+            className="assistant-trigger-btn chat-btn"
+            onClick={() => {
+              setAssistantMode('chat');
+              setIsAssistantOpen(true);
+            }}
+          >
+            <MessageSquare size={16} />
+            <span>Chat with Dharu</span>
+          </button>
+
+          <button
+            type="button"
+            className="assistant-trigger-btn voice-btn"
+            onClick={() => {
+              setAssistantMode('voice');
+              setIsAssistantOpen(true);
+            }}
+          >
+            <Mic size={16} />
+            <span>Book with Voice</span>
+          </button>
+
+          {pushSupported && (
+            <button
+              type="button"
+              className={`assistant-trigger-btn push-btn ${pushSubscribed ? 'active' : ''}`}
+              onClick={pushSubscribed ? unsubscribePush : subscribePush}
+              disabled={pushLoading}
+              title={pushSubscribed ? 'Push notifications active' : 'Enable visit reminder push notifications'}
+              aria-label={pushSubscribed ? 'Disable push reminders' : 'Enable push reminders'}
+            >
+              <Bell size={16} />
+              <span>{pushSubscribed ? 'Reminders On' : 'Enable Reminders'}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -326,6 +401,17 @@ export function OwnerBookingTab() {
           </button>
         </div>
       </form>
+
+      {/* Dharu AI Booking Assistant Drawer */}
+      <AssistantDrawer
+        isOpen={isAssistantOpen}
+        onClose={() => setIsAssistantOpen(false)}
+        initialMode={assistantMode}
+        onAppointmentBooked={(bookedApt) => {
+          setSuccessApt(bookedApt);
+          setIsAssistantOpen(false);
+        }}
+      />
     </div>
   );
 }

@@ -68,10 +68,28 @@ const authRefreshLimiter = createAuthLimiter({
   message: 'Too many session refresh requests.',
 });
 
+const assistantLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: parseInt(process.env.ASSISTANT_RATE_LIMIT || '20', 10),
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    return req.owner?.id ? `owner_${req.owner.id}` : (req.ip || '127.0.0.1');
+  },
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      error: 'Too many requests. Please wait a moment before sending another message to the assistant.',
+      code: 'RATE_LIMITED',
+    });
+  },
+});
+
 module.exports = {
   authLoginLimiter,
   authRegisterLimiter,
   authVerificationLimiter,
   authResetLimiter,
   authRefreshLimiter,
+  assistantLimiter,
 };

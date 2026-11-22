@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Calendar, Stethoscope, Heart, Building2, Settings,
-  LogOut, Sun, Moon, Menu, X, ChevronRight, ChevronLeft, ShieldCheck, Activity
+  LogOut, Sun, Moon, Menu, X, ChevronRight, ChevronLeft, ShieldCheck, Activity,
+  Bot, Mic
 } from 'lucide-react';
 import { OwnerDashboardTab } from './OwnerDashboardTab';
 import { OwnerAppointmentDualTab } from './OwnerAppointmentDualTab';
@@ -10,6 +11,7 @@ import { OwnerPetsTab } from './OwnerPetsTab';
 import { OwnerClinicalAffiliationTab } from './OwnerClinicalAffiliationTab';
 import { OwnerSettingsTab } from './OwnerSettingsTab';
 import { PublicVerifyPage } from '../verify/PublicVerifyPage';
+import { AssistantDrawer } from '../assistant/AssistantDrawer';
 
 export function OwnerPortal({ owner, onLogout }) {
   const validTabs = ['dashboard', 'appointments', 'consultation', 'pets', 'affiliation', 'settings'];
@@ -34,6 +36,7 @@ export function OwnerPortal({ owner, onLogout }) {
   });
 
   const [verifyHash, setVerifyHash] = useState(null);
+  const [isDharuOpen, setIsDharuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return document.documentElement.dataset.theme === 'dark';
   });
@@ -158,7 +161,7 @@ export function OwnerPortal({ owner, onLogout }) {
         <div className="sidebar-brand-section">
           <div className="sidebar-brand-top">
             <div className="admin-clinic-icon-badge" title="PetPulse Guardian Portal">
-              <Heart size={20} aria-hidden="true" />
+              <img src="/petpulse-badge.png" alt="PetPulse" className="admin-logo-img" />
             </div>
             {!isSidebarCollapsed && (
               <div className="sidebar-brand-text">
@@ -325,6 +328,30 @@ export function OwnerPortal({ owner, onLogout }) {
           )}
         </main>
       </div>
+
+      {/* Floating Dharu AI Assistant Trigger */}
+      <button
+        type="button"
+        className="assistant-floating-fab"
+        onClick={() => setIsDharuOpen(true)}
+        title="Open Dharu AI Assistant (Chat & Voice Booking)"
+        aria-label="Open Dharu AI Assistant"
+      >
+        <span className="fab-bot-badge">
+          <Bot size={20} />
+        </span>
+        <span className="fab-label">Ask Dharu</span>
+        <span className="fab-mic-badge">
+          <Mic size={14} />
+        </span>
+      </button>
+
+      {/* Global Dharu Assistant Drawer */}
+      <AssistantDrawer
+        isOpen={isDharuOpen}
+        onClose={() => setIsDharuOpen(false)}
+        initialMode="chat"
+      />
     </div>
   );
 }

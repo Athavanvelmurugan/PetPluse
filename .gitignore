@@ -60,3 +60,12 @@ Thumbs.db
 
 # ─── Knowledge Graph ───
 graphify-out/
+.neon
+.neon/
+
+# ─── Android & Capacitor Build Artifacts ───
+*.apk
+frontend/android/.gradle/
+frontend/android/app/build/
+frontend/android/build/
+frontend/android/local.properties

@@ -107,19 +107,30 @@ export function OwnerFindDoctorTab({ onBookingComplete }) {
         );
         const data = await res.json();
         if (data.success) {
-          // Flatten slots for this specific doctor
+          // Flatten slots for this specific doctor (handles both flat array and nested docSchedule)
+          const raw = data.data || [];
           const doctorSlots = [];
-          (data.data || []).forEach((docSchedule) => {
-            if (!docSchedule.doctorId || docSchedule.doctorId === selectedDoctor.id) {
-              (docSchedule.availableSlots || []).forEach((s) => {
-                doctorSlots.push({
-                  ...s,
-                  doctorId: selectedDoctor.id,
-                  doctorName: selectedDoctor.name,
+          if (raw.length > 0 && raw[0].availableSlots) {
+            raw.forEach((docSchedule) => {
+              if (!docSchedule.doctorId || docSchedule.doctorId === selectedDoctor.id) {
+                (docSchedule.availableSlots || []).forEach((s) => {
+                  doctorSlots.push({
+                    ...s,
+                    doctorId: selectedDoctor.id,
+                    doctorName: selectedDoctor.name,
+                  });
                 });
+              }
+            });
+          } else {
+            raw.forEach((s) => {
+              doctorSlots.push({
+                ...s,
+                doctorId: selectedDoctor.id,
+                doctorName: selectedDoctor.name,
               });
-            }
-          });
+            });
+          }
           setSlots(doctorSlots);
         }
       } catch (err) {

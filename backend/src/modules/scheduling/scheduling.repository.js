@@ -73,7 +73,7 @@ class SchedulingRepository {
     return { appointments: rows, totalCount };
   }
 
-  async findById(clinicId, id) {
+  async findById(clinicId, id, client = null) {
     const query = `
       SELECT 
         a.id,
@@ -105,11 +105,24 @@ class SchedulingRepository {
       LEFT JOIN owners o ON o.id = po.owner_id
       WHERE a.clinic_id = $1 AND a.id = $2;
     `;
-    const { rows } = await db.query(query, [clinicId, id]);
+    const runner = client || db;
+    const { rows } = await runner.query(query, [clinicId, id]);
     return rows[0] || null;
   }
 
-  async getDoctorAppointmentsForRange(clinicId, doctorId, startIso, endIso) {
+  async getClinicTimezone(clinicId) {
+    const query = `
+      SELECT COALESCE(cs.timezone, c.timezone, 'Asia/Kolkata') AS timezone
+      FROM clinics c
+      LEFT JOIN clinic_settings cs ON cs.clinic_id = c.id
+      WHERE c.id = $1
+      LIMIT 1;
+    `;
+    const { rows } = await db.query(query, [clinicId]);
+    return rows[0]?.timezone || 'Asia/Kolkata';
+  }
+
+  async getDoctorAppointmentsForRange(clinicId, doctorId, startIso, endIso, client = null) {
     const query = `
       SELECT 
         a.id,
@@ -124,10 +137,11 @@ class SchedulingRepository {
         AND a.doctor_id = $2
         AND a.scheduled_at >= $3 
         AND a.scheduled_at <= $4
-        AND a.status != 'cancelled'
+        AND a.status NOT IN ('cancelled', 'no_show')
       ORDER BY a.scheduled_at ASC;
     `;
-    const { rows } = await db.query(query, [clinicId, doctorId, startIso, endIso]);
+    const runner = client || db;
+    const { rows } = await runner.query(query, [clinicId, doctorId, startIso, endIso]);
     return rows;
   }
 
@@ -140,7 +154,7 @@ class SchedulingRepository {
     reason = '',
     source = 'desk',
     status = 'scheduled'
-  }) {
+  }, client = null) {
     const query = `
       INSERT INTO appointments (
         clinic_id, pet_id, doctor_id, scheduled_at, duration_min, type, reason, source, status
@@ -159,8 +173,9 @@ class SchedulingRepository {
       source,
       status,
     ];
-    const { rows } = await db.query(query, values);
-    return this.findById(clinicId, rows[0].id);
+    const runner = client || db;
+    const { rows } = await runner.query(query, values);
+    return this.findById(clinicId, rows[0].id, client);
   }
 
   async update(clinicId, id, fields) {
@@ -270,4 +285,3 @@ class SchedulingRepository {
 }
 
 module.exports = new SchedulingRepository();
-

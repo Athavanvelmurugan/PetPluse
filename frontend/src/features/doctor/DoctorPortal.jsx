@@ -294,7 +294,7 @@ export function DoctorPortal() {
         <div className="sidebar-brand-section">
           <div className="sidebar-brand-top">
             <div className="admin-clinic-icon-badge" title={user?.clinicName || 'Central Valley Animal Hospital'}>
-              <Stethoscope size={20} aria-hidden="true" />
+              <img src="/petpulse-badge.png" alt="PetPulse" className="admin-logo-img" />
             </div>
             {!isSidebarCollapsed && (
               <div className="sidebar-brand-text">

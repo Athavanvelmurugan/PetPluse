@@ -19,6 +19,7 @@ const auditViewerRoutes = require('./modules/audit-viewer/audit.viewer.routes');
 const verifyRoutes = require('./modules/verify/verify.routes');
 const ownerAuthRoutes = require('./modules/owner-portal/owner.auth.routes');
 const ownerPortalRoutes = require('./modules/owner-portal/owner.portal.routes');
+const assistantRoutes = require('./modules/assistant/assistant.routes');
 const superAdminRoutes = require('./modules/super-admin/super.admin.routes');
 const adminHospitalsRoutes = require('./modules/super-admin/admin.hospitals.routes');
 const practiceRoutes = require('./modules/practices/practice.routes');
@@ -69,7 +70,20 @@ app.use('/api/v1/invitations', invitationRoutes);
 // Phase 3 Public Document Verification & Owner Portal Auth
 app.use('/api/v1/verify', verifyRoutes);
 app.use('/api/v1/owner-auth', ownerAuthRoutes);
+app.use('/api/v1/owner-portal/assistant', assistantRoutes);
 app.use('/api/v1/owner-portal', ownerPortalRoutes);
+
+// Phase 5 Telegram Bot Webhook
+const telegramService = require('./modules/assistant/telegram.service');
+app.post('/api/v1/telegram/webhook', async (req, res) => {
+  try {
+    const result = await telegramService.handleWebhookUpdate(req.body);
+    res.json({ ok: true, result });
+  } catch (err) {
+    console.error('[Telegram Webhook Error]', err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
 
 // Super Admin Platform Control Plane & Hospital Approvals
 app.use('/api/v1/super-admin', authenticate, tenantContext, authorize(['super_admin']), superAdminRoutes);
@@ -122,6 +136,9 @@ const server = http.createServer(app);
 // Setup WebSocket server with authenticated handshake
 setupWebSocketServer(server);
 
+// Start 24-hour appointment reminder scheduler
+const reminderScheduler = require('./modules/scheduling/reminder.scheduler');
+
 if (require.main === module) {
   server.listen(config.port, () => {
     console.log(`=======================================================`);
@@ -129,6 +146,9 @@ if (require.main === module) {
     console.log(`🌐 HTTP API: http://localhost:${config.port}`);
     console.log(`🔌 WebSocket: ws://localhost:${config.port}/ws/v1/consultations/:id`);
     console.log(`=======================================================`);
+
+    // Start background appointment reminders (every 15 minutes)
+    reminderScheduler.start();
   });
 }
 

@@ -11,7 +11,10 @@ function onRefreshed() {
   refreshSubscribers = [];
 }
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+
 export async function apiClient(url, options = {}) {
+  const resolvedUrl = url.startsWith('http') ? url : `${API_BASE}${url}`;
   const defaultHeaders = {
     'Content-Type': 'application/json',
     ...options.headers,
@@ -30,7 +33,7 @@ export async function apiClient(url, options = {}) {
 
   let response;
   try {
-    response = await fetch(url, fetchOptions);
+    response = await fetch(resolvedUrl, fetchOptions);
   } catch (networkErr) {
     throw new Error(`Network request failed: ${networkErr.message}`);
   }

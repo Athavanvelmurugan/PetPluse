@@ -4,6 +4,10 @@ const path = require('path');
 const config = require('../config');
 
 async function ensureDatabaseExists() {
+  if (config.db.connectionString) {
+    // Cloud database (Neon): database is already provisioned
+    return;
+  }
   const rootClient = new Client({
     user: config.db.user,
     password: config.db.password,
@@ -38,18 +42,17 @@ async function ensureDatabaseExists() {
 async function runMigrations() {
   await ensureDatabaseExists();
 
-  const pool = new Pool(config.db);
+  const poolConfig = config.db.connectionString
+    ? { connectionString: config.db.connectionString, ssl: config.db.ssl }
+    : config.db;
+  const pool = new Pool(poolConfig);
   try {
-    console.log(`[DB] Connecting to "${config.db.database}" on ${config.db.host}:${config.db.port}...`);
+    console.log(`[DB] Connecting to ${config.db.connectionString ? 'Neon Cloud PostgreSQL' : `"${config.db.database}" on ${config.db.host}:${config.db.port}`}...`);
     const schemaSql = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf-8');
     await pool.query(schemaSql);
-    console.log('[DB] ✅ Schema migrations applied successfully (all 9 tables verified).');
+    console.log('[DB] ✅ Base schema applied successfully.');
 
-    const seedSql = fs.readFileSync(path.join(__dirname, 'seed.sql'), 'utf-8');
-    await pool.query(seedSql);
-    console.log('[DB] ✅ Initial seed data applied (Doctors, Pets, Appointments with integer IDs 1, 2, 3).');
-
-    // Run incremental migrations from migrations/ directory
+    // Run incremental migrations from migrations/ directory first so schema is complete
     const migrationsDir = path.join(__dirname, 'migrations');
     if (fs.existsSync(migrationsDir)) {
       const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort();
@@ -60,6 +63,10 @@ async function runMigrations() {
         console.log(`[DB] ✅ Migration applied: ${file}`);
       }
     }
+
+    const seedSql = fs.readFileSync(path.join(__dirname, 'seed.sql'), 'utf-8');
+    await pool.query(seedSql);
+    console.log('[DB] ✅ Initial seed data applied (Doctors, Pets, Appointments).');
   } catch (err) {
     console.error('[DB] Migration error:', err.message);
     process.exit(1);

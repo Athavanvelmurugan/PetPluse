@@ -2,6 +2,8 @@
  * Scheduling engine: slot computation, overlap detection, conflict resolution
  */
 
+const timezoneUtil = require('../../utils/timezone');
+
 class SchedulingEngine {
   /**
    * Check if a proposed appointment window overlaps with any existing appointments.
@@ -17,7 +19,7 @@ class SchedulingEngine {
 
     for (const apt of existingAppointments) {
       if (excludeAppointmentId && apt.id === excludeAppointmentId) continue;
-      if (apt.status === 'cancelled') continue;
+      if (apt.status === 'cancelled' || apt.status === 'no_show') continue;
 
       const aptStart = new Date(apt.scheduled_at).getTime();
       const aptEnd = aptStart + (apt.duration_min || 15) * 60 * 1000;
@@ -32,22 +34,23 @@ class SchedulingEngine {
   }
 
   /**
-   * Generate available slots for a given date and doctor's schedule.
+   * Generate available slots for a given date, doctor's schedule blocks, and clinic timezone.
    * @param {string} dateStr - 'YYYY-MM-DD'
    * @param {Array} availabilityBlocks - [{ start_time: '09:00:00', end_time: '17:00:00', slot_minutes: 15 }]
    * @param {Array} dayAppointments - Active appointments on that day for that doctor
-   * @returns {Array} List of slots with availability status
+   * @param {string} timeZone - IANA timezone (e.g. 'Asia/Kolkata', 'America/New_York')
+   * @returns {Array} List of slots with consistent shape: { start, end, label, time, available, durationMin, ... }
    */
-  generateSlotsForDate(dateStr, availabilityBlocks, dayAppointments) {
+  generateSlotsForDate(dateStr, availabilityBlocks, dayAppointments, timeZone = 'UTC') {
     const slots = [];
 
     for (const block of availabilityBlocks) {
       const slotMin = block.slot_minutes || 15;
-      const [startH, startM] = block.start_time.split(':').map(Number);
-      const [endH, endM] = block.end_time.split(':').map(Number);
+      const startTimeStr = block.start_time || '09:00:00';
+      const endTimeStr = block.end_time || '17:00:00';
 
-      const blockStart = new Date(`${dateStr}T${String(startH).padStart(2, '0')}:${String(startM).padStart(2, '0')}:00Z`);
-      const blockEnd = new Date(`${dateStr}T${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}:00Z`);
+      const blockStart = timezoneUtil.localToUtc(dateStr, startTimeStr, timeZone);
+      const blockEnd = timezoneUtil.localToUtc(dateStr, endTimeStr, timeZone);
 
       let current = new Date(blockStart);
       while (current.getTime() + slotMin * 60 * 1000 <= blockEnd.getTime()) {
@@ -57,8 +60,12 @@ class SchedulingEngine {
         const conflict = this.detectConflict(dayAppointments, slotStart, slotMin);
 
         slots.push({
-          startTime: slotStart.toISOString(),
-          endTime: slotEnd.toISOString(),
+          start: slotStart.toISOString(),
+          end: slotEnd.toISOString(),
+          startTime: slotStart.toISOString(), // backward compatibility
+          endTime: slotEnd.toISOString(),     // backward compatibility
+          label: timezoneUtil.formatTimeInTimezone(slotStart, timeZone), // e.g. "10:30 AM"
+          time: timezoneUtil.format24hTimeInTimezone(slotStart, timeZone), // e.g. "10:30"
           available: !conflict,
           durationMin: slotMin,
           bookedAppointment: conflict ? {
@@ -78,4 +85,3 @@ class SchedulingEngine {
 }
 
 module.exports = new SchedulingEngine();
-

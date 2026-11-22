@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: petcare-backend
+    env: node
+    plan: free
+    region: oregon
+    rootDir: backend
+    buildCommand: "pip install edge-tts && npm install && npm run migrate"
+    startCommand: "node src/server.js"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false # Set in Render dashboard or link from Neon
+      - key: JWT_SECRET
+        generateValue: true
+      - key: COOKIE_SECRET
+        generateValue: true
+      - key: GROQ_API_KEY
+        sync: false
+      - key: FRONTEND_URL
+        value: https://petcare-pulse.vercel.app
+

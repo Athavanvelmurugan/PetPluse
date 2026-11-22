@@ -140,8 +140,8 @@ export function AdminPortal() {
         {/* Sidebar Brand Header */}
         <div className="sidebar-brand-section">
           <div className="sidebar-brand-top">
-            <div className="admin-clinic-icon-badge">
-              <Building2 size={22} aria-hidden="true" />
+            <div className="admin-clinic-icon-badge" title={user?.clinicName || 'Central Valley Animal Hospital'}>
+              <img src="/petpulse-badge.png" alt="PetPulse" className="admin-logo-img" />
             </div>
             {!isSidebarCollapsed && (
               <div className="sidebar-brand-text">

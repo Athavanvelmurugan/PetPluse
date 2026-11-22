@@ -19,9 +19,9 @@ const vadService = require('./vad.service');
 const drugNormalizer = require('./drug-alias.normalizer');
 
 const LANGUAGE_MAP = {
-  en: null,      // Auto-detect allows Whisper to transcribe native languages (Tamil, Hindi, etc.) without acoustic distortion
+  en: 'en',      // Explicit English acoustic model (prevents foreign hallucinations on ambient noise)
   ta: 'ta',      // Explicit Tamil acoustic model
-  'en-ta': null, // Multilingual auto-detect
+  'en-ta': 'en', // Multilingual / Tanglish acoustic model
   auto: null,    // Auto-detect
 };
 
@@ -108,7 +108,7 @@ class WhisperClient {
   /**
    * Transcribe an audio file or in-memory buffer
    */
-  async transcribe({ filePath, buffer, fileName = 'audio.wav', language = 'en', speakerRole = 'unknown', chunkIndex = 0, baseSequence = 0 }) {
+  async transcribe({ filePath, buffer, fileName = 'audio.wav', language = 'en', speakerRole = 'unknown', chunkIndex = 0, baseSequence = 0, prompt = null }) {
     // 1. Pre-ASR VAD gate: check PCM energy and trim silence before sending to Whisper
     let targetBuffer = buffer;
     if (!targetBuffer && filePath && fs.existsSync(filePath)) {
@@ -136,7 +136,7 @@ class WhisperClient {
 
     if (this.client) {
       // Must FAIL LOUDLY on error — never catch and fabricate clinical mock text!
-      return await this._transcribeLive({ filePath, buffer, fileName, language, speakerRole, chunkIndex, baseSequence });
+      return await this._transcribeLive({ filePath, buffer, fileName, language, speakerRole, chunkIndex, baseSequence, prompt });
     }
 
     if (process.env.NODE_ENV === 'test' && process.env.ENABLE_WHISPER_MOCK === 'true') {
@@ -152,7 +152,7 @@ class WhisperClient {
   /**
    * Call Groq / OpenAI Whisper endpoint (supports in-memory buffer or disk file)
    */
-  async _transcribeLive({ filePath, buffer, fileName = 'audio.wav', language, speakerRole, chunkIndex, baseSequence }) {
+  async _transcribeLive({ filePath, buffer, fileName = 'audio.wav', language, speakerRole, chunkIndex, baseSequence, prompt: customPrompt = null }) {
     let filePayload;
     if (buffer && Buffer.isBuffer(buffer)) {
       if (buffer.length === 0) {
@@ -161,7 +161,17 @@ class WhisperClient {
         err.code = 'INVALID_AUDIO_INPUT';
         throw err;
       }
-      filePayload = await toFile(buffer, fileName);
+      const ext = path.extname(fileName).toLowerCase();
+      const mimeMap = {
+        '.webm': 'audio/webm',
+        '.ogg': 'audio/ogg',
+        '.wav': 'audio/wav',
+        '.mp3': 'audio/mpeg',
+        '.m4a': 'audio/m4a',
+        '.flac': 'audio/flac',
+      };
+      const contentType = mimeMap[ext] || 'audio/webm';
+      filePayload = await toFile(buffer, fileName, { type: contentType });
     } else if (filePath && fs.existsSync(filePath)) {
       const stats = fs.statSync(filePath);
       if (stats.size === 0) {
@@ -179,7 +189,7 @@ class WhisperClient {
     }
 
     const whisperLanguage = LANGUAGE_MAP[language] ?? null;
-    const prompt = language === 'ta' ? TAMIL_PROMPT : VETERINARY_PROMPT;
+    const prompt = customPrompt || (language === 'ta' ? TAMIL_PROMPT : VETERINARY_PROMPT);
 
     console.log(`[Whisper:${this.provider}] Transcribing chunk #${chunkIndex} via ${this.model} | lang=${whisperLanguage || 'auto'} | speaker=${speakerRole}`);
 

@@ -4,7 +4,10 @@
  * and dev fallback headers to prevent 401 disconnections.
  */
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+
 export async function ownerFetch(url, options = {}) {
+  const resolvedUrl = url.startsWith('http') ? url : `${API_BASE}${url}`;
   let session = null;
   try {
     const raw = localStorage.getItem('petcare_owner_session');
@@ -23,7 +26,7 @@ export async function ownerFetch(url, options = {}) {
     delete headers['Content-Type'];
   }
 
-  return fetch(url, {
+  return fetch(resolvedUrl, {
     ...options,
     credentials: 'include',
     headers,

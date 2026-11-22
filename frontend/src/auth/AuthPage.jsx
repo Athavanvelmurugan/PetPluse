@@ -120,11 +120,11 @@ export function AuthPage({ initialView = 'login', onViewChange }) {
             <p className="auth-hero-app-motto">Every heartbeat, every record.</p>
           </div>
 
-          {/* Big Cute Dog & Cat Logo */}
+          {/* Brand Emblem */}
           <div className="auth-hero-big-logo-wrap">
             <img
               src="/petpulse-logo.png"
-              alt="PetPulse Cute Dog and Cat Logo"
+              alt="PetPulse Clinical Veterinary Emblem"
               className="auth-hero-big-logo"
             />
           </div>

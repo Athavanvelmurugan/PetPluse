@@ -176,7 +176,7 @@ export function SuperAdminPortal() {
         <div className="sidebar-brand-section">
           <div className="sidebar-brand-top">
             <div className="admin-clinic-icon-badge" title="PetPulse Platform Control Plane">
-              <ShieldCheck size={20} aria-hidden="true" />
+              <img src="/petpulse-badge.png" alt="PetPulse Network" className="admin-logo-img" />
             </div>
             {!isSidebarCollapsed && (
               <div className="sidebar-brand-text">

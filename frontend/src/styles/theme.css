@@ -87,6 +87,9 @@
   --surface:        var(--color-surface);
   --surface-alt:    var(--color-surface-alt);
   --surface-card:   var(--color-surface-card);
+  --bg-card:        var(--color-surface-card);
+  --bg-main:        var(--color-bg);
+  --bg-hover:       var(--color-surface-alt);
   --border:         var(--color-border);
   --border-focus:   var(--color-border-focus);
   --text-main:      var(--color-text);

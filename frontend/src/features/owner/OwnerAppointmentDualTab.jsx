@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Calendar, Clock, CheckCircle, AlertCircle, Building2,
-  Stethoscope, Heart, User, Check, ListFilter, ArrowRight, RefreshCw, Sun, Moon
+  Stethoscope, Heart, User, Check, ListFilter, ArrowRight, RefreshCw, Sun, Moon,
+  MessageSquare, Mic, Bell, Bot, Sparkles
 } from 'lucide-react';
 import { SearchFilterBar } from '../../components/common/SearchFilterBar';
 import { PaginationControl } from '../../components/common/PaginationControl';
 import { ownerFetch } from '../../api/ownerClient';
+import { AssistantDrawer } from '../assistant/AssistantDrawer';
+import { usePushNotifications } from '../assistant/usePushNotifications';
+import '../assistant/assistant.css';
 
 function formatSlotTime(isoOrTime) {
   if (!isoOrTime) return '';
@@ -43,6 +47,17 @@ export function OwnerAppointmentDualTab({ owner, onNavigateTab }) {
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(null);
   const [bookingError, setBookingError] = useState(null);
+
+  // Dharu AI Assistant State
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const [assistantMode, setAssistantMode] = useState('chat');
+  const {
+    isSupported: pushSupported,
+    isSubscribed: pushSubscribed,
+    subscribe: subscribePush,
+    unsubscribe: unsubscribePush,
+    loading: pushLoading,
+  } = usePushNotifications();
 
   // Confirmed Appointments List State (Paginated & Searchable)
   const [appointments, setAppointments] = useState([]);
@@ -189,6 +204,13 @@ export function OwnerAppointmentDualTab({ owner, onNavigateTab }) {
     }
   }, [activeSubTab, fetchAppointments]);
 
+  // Handle booking confirmed via Dharu assistant (memoized callback)
+  const handleAssistantBooking = useCallback((bookedApt) => {
+    setBookingSuccess(`Appointment successfully booked for ${bookedApt.petName} with ${bookedApt.doctorName} on ${bookedApt.date} at ${bookedApt.time}!`);
+    setIsAssistantOpen(false);
+    setActiveSubTab('confirmed');
+  }, []);
+
   // Submit appointment booking
   const handleConfirmBooking = async (e) => {
     e.preventDefault();
@@ -302,6 +324,61 @@ export function OwnerAppointmentDualTab({ owner, onNavigateTab }) {
           <span>{bookingSuccess}</span>
         </div>
       )}
+
+      {/* Dharu AI Booking Assistant Trigger Banner */}
+      <div className="assistant-trigger-bar">
+        <div className="assistant-trigger-left">
+          <div className="assistant-trigger-badge" aria-hidden="true">
+            <Bot size={22} />
+          </div>
+          <div className="assistant-trigger-text">
+            <span className="assistant-trigger-title">Meet Dharu — Your Veterinary AI Assistant</span>
+            <span className="assistant-trigger-desc">
+              Book visits conversationally by typing or speaking in English, Tamil, or Tanglish.
+            </span>
+          </div>
+        </div>
+
+        <div className="assistant-trigger-actions">
+          <button
+            type="button"
+            className="assistant-trigger-btn chat-btn"
+            onClick={() => {
+              setAssistantMode('chat');
+              setIsAssistantOpen(true);
+            }}
+          >
+            <MessageSquare size={16} />
+            <span>Chat with Dharu</span>
+          </button>
+
+          <button
+            type="button"
+            className="assistant-trigger-btn voice-btn"
+            onClick={() => {
+              setAssistantMode('voice');
+              setIsAssistantOpen(true);
+            }}
+          >
+            <Mic size={16} />
+            <span>Book with Voice</span>
+          </button>
+
+          {pushSupported && (
+            <button
+              type="button"
+              className={`assistant-trigger-btn push-btn ${pushSubscribed ? 'active' : ''}`}
+              onClick={pushSubscribed ? unsubscribePush : subscribePush}
+              disabled={pushLoading}
+              title={pushSubscribed ? 'Push notifications active' : 'Enable visit reminder push notifications'}
+              aria-label={pushSubscribed ? 'Disable push reminders' : 'Enable push reminders'}
+            >
+              <Bell size={16} />
+              <span>{pushSubscribed ? 'Reminders On' : 'Enable Reminders'}</span>
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* ═══════════════════════════════════════════════════════════════
           SUB-TAB 1: APPOINTMENT BOOKING (Doctor Confirmed Slots)
@@ -687,6 +764,14 @@ export function OwnerAppointmentDualTab({ owner, onNavigateTab }) {
           </div>
         </div>
       )}
+
+      {/* Dharu AI Booking Assistant Drawer */}
+      <AssistantDrawer
+        isOpen={isAssistantOpen}
+        onClose={() => setIsAssistantOpen(false)}
+        initialMode={assistantMode}
+        onAppointmentBooked={handleAssistantBooking}
+      />
     </div>
   );
 }
