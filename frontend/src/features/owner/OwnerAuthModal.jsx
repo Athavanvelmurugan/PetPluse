@@ -140,8 +140,15 @@ export function OwnerAuthModal({ onLoginSuccess, onCancel }) {
       }
 
       if (data.data?.owner) {
-        localStorage.setItem('petcare_owner_session', JSON.stringify(data.data.owner));
-        onLoginSuccess(data.data.owner);
+        const sessionUser = {
+          ...data.data.owner,
+          token: data.data.token || data.token,
+        };
+        localStorage.setItem('petcare_owner_session', JSON.stringify(sessionUser));
+        if (data.data?.token || data.token) {
+          localStorage.setItem('petcare_owner_token', data.data.token || data.token);
+        }
+        onLoginSuccess(sessionUser);
       }
     } catch (err) {
       setError(err.message);

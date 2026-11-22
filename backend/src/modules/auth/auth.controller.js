@@ -313,7 +313,10 @@ class AuthController {
       res.json({
         success: true,
         mfaRequired: false,
-        data: { user: result.user },
+        data: {
+          user: result.user,
+          token: result.accessToken || result.tokens?.accessToken,
+        },
       });
     } catch (err) {
       next(err);
@@ -339,7 +342,13 @@ class AuthController {
         activePracticeId: result.user.practiceId,
       });
 
-      res.json({ success: true, data: { user: result.user } });
+      res.json({
+        success: true,
+        data: {
+          user: result.user,
+          token: result.accessToken || result.tokens?.accessToken,
+        },
+      });
     } catch (err) {
       next(err);
     }
@@ -363,7 +372,13 @@ class AuthController {
         activePracticeId: result.user.practiceId,
       });
 
-      res.json({ success: true, data: { user: result.user } });
+      res.json({
+        success: true,
+        data: {
+          user: result.user,
+          token: result.accessToken || result.tokens?.accessToken,
+        },
+      });
     } catch (err) {
       this.clearAuthCookies(res);
       next(err);
@@ -387,7 +402,13 @@ class AuthController {
         activePracticeId: result.user.practiceId,
       });
 
-      res.json({ success: true, data: { user: result.user } });
+      res.json({
+        success: true,
+        data: {
+          user: result.user,
+          token: result.accessToken || result.tokens?.accessToken,
+        },
+      });
     } catch (err) {
       next(err);
     }

@@ -57,6 +57,9 @@ export function AuthProvider({ children }) {
     }
 
     if (data.data?.user) {
+      if (data.data?.token || data.token) {
+        localStorage.setItem('petcare_token', data.data?.token || data.token);
+      }
       try {
         localStorage.removeItem('activeConsultationId');
         localStorage.removeItem('activeDoctorId');
@@ -89,6 +92,9 @@ export function AuthProvider({ children }) {
     }
 
     if (data.data?.user) {
+      if (data.data?.token || data.token) {
+        localStorage.setItem('petcare_token', data.data?.token || data.token);
+      }
       try {
         localStorage.removeItem('activeConsultationId');
         localStorage.removeItem('activeDoctorId');
@@ -186,6 +192,8 @@ export function AuthProvider({ children }) {
       throw new Error(data.error || 'Failed to switch practice workspace.');
     }
     try {
+      localStorage.removeItem('petcare_token');
+      localStorage.removeItem('petcare_owner_token');
       localStorage.removeItem('activeConsultationId');
       Object.keys(localStorage).forEach((k) => {
         if (k.startsWith('activeConsultationId')) localStorage.removeItem(k);
@@ -202,6 +210,8 @@ export function AuthProvider({ children }) {
       await apiClient('/api/v1/auth/logout', { method: 'POST' });
     } catch (_) {}
     try {
+      localStorage.removeItem('petcare_token');
+      localStorage.removeItem('petcare_owner_token');
       localStorage.removeItem('activeConsultationId');
       localStorage.removeItem('activeDoctorId');
       localStorage.removeItem('petcare_owner_session');

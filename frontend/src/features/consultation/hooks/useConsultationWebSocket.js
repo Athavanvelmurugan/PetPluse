@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { getWsBaseUrl } from '../../../api/setupApi';
 
 export function useConsultationWebSocket(consultationId, onDocumentsReady, onStatusChange) {
   const [connectionStatus, setConnectionStatus] = useState('disconnected'); // 'connecting' | 'connected' | 'disconnected' | 'error'
@@ -67,10 +68,9 @@ export function useConsultationWebSocket(consultationId, onDocumentsReady, onSta
       wsRef.current = null;
     }
 
-    // Use current host to route through Vite proxy (/ws) or production reverse proxy
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/ws/v1/consultations/${consultationId}`;
+    // Use getWsBaseUrl to support native Android APK and web reverse proxy
+    const wsBase = getWsBaseUrl();
+    const wsUrl = `${wsBase}/ws/v1/consultations/${consultationId}`;
 
     setConnectionStatus('connecting');
     const ws = new WebSocket(wsUrl);

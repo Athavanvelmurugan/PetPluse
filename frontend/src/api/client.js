@@ -3,6 +3,8 @@
  * Intercepts 401s, attempts silent token refresh, and replays requests.
  */
 
+import { getApiBaseUrl } from './setupApi';
+
 let isRefreshing = false;
 let refreshSubscribers = [];
 
@@ -11,12 +13,14 @@ function onRefreshed() {
   refreshSubscribers = [];
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
-
 export async function apiClient(url, options = {}) {
-  const resolvedUrl = url.startsWith('http') ? url : `${API_BASE}${url}`;
+  const base = getApiBaseUrl();
+  const resolvedUrl = url.startsWith('http') ? url : `${base}${url}`;
+  const token = localStorage.getItem('petcare_token');
+
   const defaultHeaders = {
     'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
 
@@ -53,16 +57,23 @@ export async function apiClient(url, options = {}) {
     if (!isRefreshing) {
       isRefreshing = true;
       try {
-        const refreshResponse = await fetch('/api/v1/auth/refresh', {
+        const refreshResponse = await fetch(`${base}/api/v1/auth/refresh`, {
           method: 'POST',
           credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
         });
 
         if (refreshResponse.ok) {
+          const refreshData = await refreshResponse.json().catch(() => null);
+          if (refreshData?.data?.token) {
+            localStorage.setItem('petcare_token', refreshData.data.token);
+          }
           isRefreshing = false;
           onRefreshed();
-          return fetch(url, fetchOptions);
+          return fetch(resolvedUrl, fetchOptions);
         } else {
           isRefreshing = false;
           // Refresh failed - session expired
@@ -77,7 +88,7 @@ export async function apiClient(url, options = {}) {
     // Queue request until refresh completes
     return new Promise((resolve) => {
       refreshSubscribers.push(async () => {
-        resolve(await fetch(url, fetchOptions));
+        resolve(await fetch(resolvedUrl, fetchOptions));
       });
     });
   }
