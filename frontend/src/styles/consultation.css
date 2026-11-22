@@ -1816,6 +1816,13 @@ textarea.form-control,
   border-radius: var(--radius-md);
 }
 
+@media (max-width: 1023px) and (pointer: coarse) {
+  .modal-close-icon-btn {
+    min-width: var(--touch-target);
+    min-height: var(--touch-target);
+  }
+}
+
 .modal-close-icon-btn:hover {
   background: var(--slate-100);
   color: var(--color-text);

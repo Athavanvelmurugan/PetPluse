@@ -794,6 +794,12 @@
   font-size: var(--text-xs);
 }
 
+@media (max-width: 1023px) and (pointer: coarse) {
+  .appt-btn-sm {
+    min-height: var(--touch-target);
+  }
+}
+
 /* Slots Matrix */
 .doctor-slots-matrix {
   display: grid;
@@ -916,23 +922,37 @@
   backdrop-filter: blur(4px);
   z-index: 1100;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  padding: var(--space-3);
+  padding: 0;
   animation: fadeIn 0.2s ease-out;
 }
 
 .patient-chart-modal {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   box-shadow: var(--shadow-xl);
-  width: min(94vw, 980px);
+  width: 100%;
   max-height: 90dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding-bottom: calc(var(--space-4) + var(--safe-bottom));
+}
+
+@media (min-width: 768px) {
+  .patient-chart-backdrop {
+    align-items: center;
+    padding: var(--space-4);
+  }
+
+  .patient-chart-modal {
+    border-radius: var(--radius-lg);
+    width: min(94vw, 980px);
+    padding-bottom: 0;
+  }
 }
 
 @keyframes scaleIn {
@@ -2727,6 +2747,12 @@
   cursor: pointer;
   transition: all var(--transition-fast, 0.15s ease);
   font-family: inherit;
+}
+
+@media (max-width: 1023px) and (pointer: coarse) {
+  .shift-preset-btn {
+    min-height: var(--touch-target);
+  }
 }
 
 .shift-preset-btn:hover {

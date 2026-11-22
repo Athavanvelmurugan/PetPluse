@@ -352,6 +352,13 @@
   transition: color var(--transition-fast);
 }
 
+@media (max-width: 1023px) and (pointer: coarse) {
+  .auth-password-toggle-btn {
+    min-width: var(--touch-target);
+    min-height: var(--touch-target);
+  }
+}
+
 .auth-password-toggle-btn:hover {
   color: var(--color-text);
 }
