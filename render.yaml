@@ -5,7 +5,7 @@ services:
     plan: free
     region: oregon
     rootDir: backend
-    buildCommand: "pip install edge-tts && npm install && npm run migrate"
+    buildCommand: "npm install && npm run migrate"
     startCommand: "node src/server.js"
     envVars:
       - key: NODE_ENV
