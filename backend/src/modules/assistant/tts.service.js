@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { execFile } = require('child_process');
+const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
 
 // Cache directory for synthesized audio chunks
 const CACHE_DIR = path.resolve(__dirname, '../../../cache/tts');
@@ -11,7 +11,7 @@ try {
 
 class TtsService {
   /**
-   * Synthesize and stream high-quality Microsoft Neural speech via edge-tts.
+   * Synthesize and stream high-quality Microsoft Neural speech via native msedge-tts.
    * - en-IN-NeerjaExpressiveNeural: English & Tanglish (Soft, melodious, natural Indian English)
    * - ta-IN-PallaviNeural: Pure Tamil (Soft, native Tamil pronunciation)
    */
@@ -57,35 +57,46 @@ class TtsService {
       return;
     }
 
-    // 2. Synthesize using python -m edge_tts
-    const args = [
-      '-m', 'edge_tts',
-      '--text', cleanText,
-      '--voice', selectedVoice,
-      '--write-media', cacheFile,
-    ];
+    // 2. Synthesize using native Node.js msedge-tts (No python dependency)
+    try {
+      const tts = new MsEdgeTTS();
+      await tts.setMetadata(selectedVoice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+      const { audioStream } = tts.toStream(cleanText);
 
-    execFile('python', args, { timeout: 15000 }, (error) => {
-      if (error) {
-        console.error('[TtsService] edge-tts error:', error);
-        if (!res.headersSent) {
-          res.status(500).json({ success: false, error: 'TTS synthesis failed' });
-        }
-        return;
-      }
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
 
-      if (fs.existsSync(cacheFile) && fs.statSync(cacheFile).size > 100) {
-        res.setHeader('Content-Type', 'audio/mpeg');
-        res.setHeader('Cache-Control', 'public, max-age=86400');
-        fs.createReadStream(cacheFile).pipe(res);
-      } else {
-        if (!res.headersSent) {
-          res.status(500).json({ success: false, error: 'Empty audio output' });
+      const chunks = [];
+      audioStream.on('data', (chunk) => {
+        chunks.push(chunk);
+        res.write(chunk);
+      });
+
+      audioStream.on('end', () => {
+        res.end();
+        if (chunks.length > 0) {
+          const buffer = Buffer.concat(chunks);
+          fs.writeFile(cacheFile, buffer, (err) => {
+            if (err) console.error('[TtsService] Cache write error:', err);
+          });
         }
+      });
+
+      audioStream.on('error', (err) => {
+        console.error('[TtsService] audioStream error:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ success: false, error: 'TTS synthesis stream error' });
+        } else {
+          res.end();
+        }
+      });
+    } catch (err) {
+      console.error('[TtsService] msedge-tts synthesis error:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ success: false, error: 'TTS synthesis failed' });
       }
-    });
+    }
   }
 }
 
 module.exports = new TtsService();
-

@@ -6,3 +6,4 @@ process.chdir(backendDir);
 
 // Require and run backend server
 require(path.join(backendDir, 'src', 'server.js'));
+
